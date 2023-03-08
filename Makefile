@@ -1,11 +1,11 @@
 #Makefile
 
 # all
-all:serveur main.o serveurtcp.o
+all:serveur main.o serveurtcp.o 
 
 # serveur
 serveur:main.o serveurtcp.o Makefile
-	g++ -o serveur main.o serveurtcp.o -lpthread -lrt -Wall
+	g++ -o serveur main.o serveurtcp.o -lpthread -lrt -Wall -lmysqlcppconn
 
 # main.o
 main.o: main.cpp Makefile
