@@ -6,7 +6,7 @@
 #include <vector>
 #include <stdlib.h>
 #include "mysql_driver.h"
-
+#include <sstream>
 #include <cppconn/driver.h>
 #include <cppconn/exception.h>
 #include <cppconn/resultset.h>
@@ -50,6 +50,10 @@ int main()
 			int minute = reponse[3];
 			cout<<endl<<endl<<dec<<"Heure: "<<heure;
 			cout<<endl<<dec<<"Minute: "<<minute;
+			std::ostringstream h;
+			h<<heure<<":"<<minute;
+			std::string hreleve = h.str();
+			cout<<endl<<"Heure: "<<hreleve;
 			
 			//char date = (reponse[7]<<16)+"/"+(reponse[8]<<8)+"/"+reponse[9];
 			int jour = reponse[4];
@@ -58,6 +62,10 @@ int main()
 			cout<<endl<<dec<<"Jour: "<<jour;
 			cout<<endl<<dec<<"Mois: "<<mois;
 			cout<<endl<<dec<<"Annee: "<<annee;
+			std::ostringstream d;
+			d<<annee<<"-"<<mois<<"-"<<jour;
+			std::string date = d.str();
+			cout<<endl<<"Date: "<<date;
 			
 			float temperature = (reponse[9]<<8)+reponse[10];
 			temperature = temperature / 10;
@@ -76,10 +84,11 @@ int main()
 			int girouette = (reponse[41]<<8)+reponse[42];
 			cout<<endl<<dec<<"Girouette: "<<girouette<<"°";
 			
-			int pyranometre = (reponse[44]<<8)+reponse[45];
+			float pyranometre = (reponse[44]<<8)+reponse[45];
 			cout<<endl<<dec<<"Pyranomètre: "<<pyranometre<<"W/m2";
 			
-			int anemometre = reponse[48];
+			float anemometre = reponse[48];
+			anemometre = anemometre / 10;
 			cout<<endl<<dec<<"Anèmomètre: "<<anemometre<<"m/s";
 			
 			int pluviometre = reponse[51];
@@ -95,7 +104,8 @@ int main()
 				con = driver-> connect("localhost", "collecte", "collecte");
 				stmt = con-> createStatement();
 				stmt->execute("USE collecte");
-				//stmt-> execute("INSERT INTO station1champs(date, heure, Anemometre, Girouette, Pyranometre, Humectometre, Pluviometre, Humidite, Batterie, Temperature) VALUES('2023-03-01', '17:00:00', '0.0', '0', '0.0', '0', '0', '0', '0', '0', '02', '0.0')");
+				char query[1200];
+				sprintf(query, "INSERT INTO station1champs(date, heure, Anemometre, Girouette, Pyranometre, Humectometre, Pluviometre, Humidite, Batterie, Temperature) VALUES(date, '17:02:05', '%f', '%d', '%f', '%d', '%d', '%d', '%d', '%f')", anemometre, girouette, pyranometre, humectometre, pluviometre, humidite, batterie, temperature);
 				res = stmt-> executeQuery("SELECT * FROM station1champs ORDER BY date ASC");
 				
 				delete res;
