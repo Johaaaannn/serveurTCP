@@ -14,42 +14,42 @@
 
 using namespace std;
 
-int main()
-{
+int main(){
+
 		ServeurTcp serveur(1115);
-		cout<<"Le serveur est en attente de connexion..."<<endl;
 		
 		while(1)
 		{
+
+		cout<<"Le serveur est en attente de connexion..."<<endl;
+
 		serveur.accepter();
-		cout<<"Connexion etablie avec le client."<<endl;
-		
+		cout<<"Connexion établie avec le client."<<endl;
 		sleep(2);
 		
 		unsigned char req[5] ={ 0xf2, 0x03, 0x0c, 0xca, 0x6c};
 		unsigned char* requete = reinterpret_cast<unsigned char*>(req);
 		serveur.envoyerTrame(requete);
-		cout<<"Requête envoyé"<<endl;
+		cout<<"Requête envoyée"<<endl;
 		
 		unsigned char reponse[255];
 		serveur.recevoirTrame(reponse);
 		char* rep = reinterpret_cast<char*>(reponse);
-		cout<<endl<<endl<<"Réponse recu: ";
+		cout<<endl<<endl<<"Réponse reçu: ";
 		for(int i=0;i<70;i++){
 			cout<<hex<< " 0x"<<(int)(rep[i]&0xff);
 		}
 		
-		if((rep[1]&0xff)==0x1)
-			{
-			cout<<endl<<"-----------Station 1------"<<endl;
+		if((rep[1]&0xff)==0x1){
+
+			cout<<endl<<"---------- Station 1 ----------";
 			int station = reponse[1];
 			cout<<endl<<endl<<dec<<"Station: "<<station;
 			
-			//char heure = (reponse[5]<<8)+":"+reponse[6];
 			int heure = reponse[2];
 			int minute = reponse[3];
-			cout<<endl<<endl<<dec<<"Heure: "<<heure;
-			cout<<endl<<dec<<"Minute: "<<minute;
+			//cout<<endl<<endl<<dec<<"Heure: "<<heure;
+			//cout<<endl<<dec<<"Minute: "<<minute;
 			std::ostringstream h;
 			h<<heure<<":"<<minute;
 			std::string hreleve = h.str();
@@ -59,13 +59,13 @@ int main()
 			int jour = reponse[4];
 			int mois = reponse[5];
 			int annee = reponse[6];
-			cout<<endl<<dec<<"Jour: "<<jour;
-			cout<<endl<<dec<<"Mois: "<<mois;
-			cout<<endl<<dec<<"Annee: "<<annee;
+			//cout<<endl<<dec<<"Jour: "<<jour;
+			//cout<<endl<<dec<<"Mois: "<<mois;
+			//cout<<endl<<dec<<"Annee: "<<annee;
 			std::ostringstream d;
-			d<<annee<<"-"<<mois<<"-"<<jour;
-			std::string date = d.str();
-			cout<<endl<<"Date: "<<date;
+			d<<"20"<<annee<<"-"<<mois<<"-"<<jour;
+			std::string dreleve = d.str();
+			cout<<endl<<"Date: "<<dreleve;
 			
 			float temperature = (reponse[9]<<8)+reponse[10];
 			temperature = temperature / 10;
@@ -75,7 +75,7 @@ int main()
 			cout<<endl<<dec<<"Humidité: "<<humidite<<"%";
 			
 			int batterie = (int)reponse[16];
-			batterie = batterie / 10;
+			//batterie = batterie / 10;
 			cout<<endl<<dec<<"Batterie: "<<batterie<<"V";
 			
 			int humectometre = reponse[30];
@@ -105,7 +105,7 @@ int main()
 				stmt = con-> createStatement();
 				stmt->execute("USE collecte");
 				char query[1200];
-				sprintf(query, "INSERT INTO station1champs(date, heure, Anemometre, Girouette, Pyranometre, Humectometre, Pluviometre, Humidite, Batterie, Temperature) VALUES(date, '17:02:05', '%f', '%d', '%f', '%d', '%d', '%d', '%d', '%f')", anemometre, girouette, pyranometre, humectometre, pluviometre, humidite, batterie, temperature);
+				sprintf(query, "INSERT INTO station1champs(date, heure, Anemometre, Girouette, Pyranometre, Humectometre, Pluviometre, Humidite, Batterie, Temperature) VALUES('%s', '%02d:%02d', %f, %d, %f, %d, %d, %d, %d, %f)", dreleve.c_str(), heure, minute, anemometre, girouette, pyranometre, humectometre, pluviometre, humidite, batterie, temperature);
 				res = stmt-> executeQuery("SELECT * FROM station1champs ORDER BY date ASC");
 				
 				delete res;
@@ -121,53 +121,58 @@ int main()
 				}
 		}
 		
-		if((rep[1]&0xff)==0x2)
-			{
-			cout<<endl<<"-----------Station 2------"<<endl;
+		if((rep[1]&0xff)==0x2){
+			cout<<endl<<"---------- Station 2 ----------";
 			int station = rep[1];
 			cout<<endl<<endl<<hex<<"Station: "<<station;
 			
-			//char heure = (rep[5]<<8)+":"+rep[6];
 			int heure = rep[2];
 			int minute = rep[3];
-			cout<<endl<<endl<<hex<<"Heure: "<<heure;
-			cout<<endl<<endl<<hex<<"Minute: "<<minute;
+			//cout<<endl<<endl<<dec<<"Heure: "<<heure;
+			//cout<<endl<<dec<<"Minute: "<<minute;
+			std::ostringstream h;
+			h<<heure<<":"<<minute;
+			std::string hreleve = h.str();
+			cout<<endl<<"Heure: "<<hreleve;
 			
-			//char date = (rep[7]<<16)+"/"+(rep[8]<<8)+"/"+rep[9];
 			int jour = rep[4];
 			int mois = rep[5];
 			int annee = rep[6];
-			cout<<endl<<endl<<hex<<"Date: "<<jour;
-			cout<<endl<<endl<<hex<<"Date: "<<mois;
-			cout<<endl<<endl<<hex<<"Date: "<<annee;
+			//cout<<endl<<endl<<dec<<"Date: "<<jour;
+			//cout<<endl<<endl<<dec<<"Date: "<<mois;
+			//cout<<endl<<endl<<dec<<"Date: "<<annee;
+			std::ostringstream d;
+			d<<"20"<<annee<<"-"<<mois<<"-"<<jour;
+			std::string dreleve = d.str();
+			cout<<endl<<"Date: "<<dreleve;
 			
-			int temperature = (rep[9]<<8)+rep[10];
+			float temperature = (rep[9]<<8)+rep[10];
 			temperature = temperature / 10;
-			cout<<endl<<endl<<hex<<"Température: "<<temperature;
+			cout<<endl<<endl<<dec<<"Température: "<<temperature;
 			
 			int humidite = rep[13];
-			cout<<endl<<endl<<hex<<"Humidité: "<<humidite;
+			cout<<endl<<endl<<dec<<"Humidité: "<<humidite;
 			
-			int tensiometre1 = rep[15];
+			float tensiometre1 = rep[15];
 			tensiometre1 = tensiometre1 / 10;
-			cout<<endl<<endl<<hex<<"Tensiomètre 1: "<<tensiometre1;
+			cout<<endl<<endl<<dec<<"Tensiomètre 1: "<<tensiometre1;
 			
-			int tensiometre2 = rep[17];
+			float tensiometre2 = rep[17];
 			tensiometre2 = tensiometre2 / 10;
-			cout<<endl<<endl<<hex<<"Tensiomètre 2: "<<tensiometre2;
+			cout<<endl<<endl<<dec<<"Tensiomètre 2: "<<tensiometre2;
 			
 			int humisol1 = rep[30];
 			humisol1 = humisol1 / 10;
-			cout<<endl<<endl<<hex<<"Humidité Sol 1: "<<humisol1;
+			cout<<endl<<endl<<dec<<"Humidité Sol 1: "<<humisol1;
 			
 			int humisol2 = rep[33];
 			humisol2 = humisol2 / 10;
-			cout<<endl<<endl<<hex<<"Humidité Sol 2: "<<humisol2;
+			cout<<endl<<endl<<dec<<"Humidité Sol 2: "<<humisol2;
 			
-			}
+		}
 		
 		serveur.fermer();
-		cout<<endl<<endl<<"Connexion fermee."<<endl<<endl;
+		cout<<endl<<endl<<"Connexion fermée."<<endl<<endl;
 		
 	}
 
