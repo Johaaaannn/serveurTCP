@@ -75,7 +75,7 @@ int main(){
 			cout<<endl<<dec<<"Humidité: "<<humidite<<"%";
 			
 			int batterie = (int)reponse[16];
-			//batterie = batterie / 10;
+			batterie = batterie / 10;
 			cout<<endl<<dec<<"Batterie: "<<batterie<<"V";
 			
 			int humectometre = reponse[30];
@@ -99,16 +99,18 @@ int main(){
 				sql::mysql::MySQL_Driver *driver;
 				sql:: Connection *con;
 				sql::Statement *stmt;
-				sql::ResultSet *res;
+				//sql::ResultSet *res;
+				bool res;
 				driver = sql::mysql::get_mysql_driver_instance();
 				con = driver-> connect("localhost", "collecte", "collecte");
 				stmt = con-> createStatement();
 				stmt->execute("USE collecte");
 				char query[1200];
 				sprintf(query, "INSERT INTO station1champs(date, heure, Anemometre, Girouette, Pyranometre, Humectometre, Pluviometre, Humidite, Batterie, Temperature) VALUES('%s', '%02d:%02d', %f, %d, %f, %d, %d, %d, %d, %f)", dreleve.c_str(), heure, minute, anemometre, girouette, pyranometre, humectometre, pluviometre, humidite, batterie, temperature);
-				res = stmt-> executeQuery("SELECT * FROM station1champs ORDER BY date ASC");
-				
-				delete res;
+				//cout<<endl<<query;
+				res = stmt-> execute(query);
+				cout<<endl<<endl<<"Nombre de ligne insérée: "<<res+1;
+				//delete res;
 				delete stmt;
 				delete con;
 				}
@@ -146,28 +148,55 @@ int main(){
 			std::string dreleve = d.str();
 			cout<<endl<<"Date: "<<dreleve;
 			
-			float temperature = (rep[9]<<8)+rep[10];
+			float temperature = (reponse[9]<<8)+reponse[10];
 			temperature = temperature / 10;
-			cout<<endl<<endl<<dec<<"Température: "<<temperature;
+			cout<<endl<<dec<<"Température: "<<temperature<<" degrés";
 			
-			int humidite = rep[13];
-			cout<<endl<<endl<<dec<<"Humidité: "<<humidite;
+			int humidite = reponse[13];
+			cout<<endl<<dec<<"Humidité: "<<humidite;
 			
-			float tensiometre1 = rep[15];
+			float tensiometre1 = reponse[15];
 			tensiometre1 = tensiometre1 / 10;
-			cout<<endl<<endl<<dec<<"Tensiomètre 1: "<<tensiometre1;
+			cout<<endl<<dec<<"Tensiomètre 1: "<<tensiometre1;
 			
-			float tensiometre2 = rep[17];
+			float tensiometre2 = reponse[17];
 			tensiometre2 = tensiometre2 / 10;
-			cout<<endl<<endl<<dec<<"Tensiomètre 2: "<<tensiometre2;
+			cout<<endl<<dec<<"Tensiomètre 2: "<<tensiometre2;
 			
-			int humisol1 = rep[30];
+			int humisol1 = reponse[30];
 			humisol1 = humisol1 / 10;
-			cout<<endl<<endl<<dec<<"Humidité Sol 1: "<<humisol1;
+			cout<<endl<<dec<<"Humidité Sol 1: "<<humisol1;
 			
-			int humisol2 = rep[33];
+			int humisol2 = reponse[33];
 			humisol2 = humisol2 / 10;
-			cout<<endl<<endl<<dec<<"Humidité Sol 2: "<<humisol2;
+			cout<<endl<<dec<<"Humidité Sol 2: "<<humisol2;
+			
+			try {
+				sql::mysql::MySQL_Driver *driver;
+				sql:: Connection *con;
+				sql::Statement *stmt;
+				//sql::ResultSet *res;
+				bool res;
+				driver = sql::mysql::get_mysql_driver_instance();
+				con = driver-> connect("localhost", "collecte", "collecte");
+				stmt = con-> createStatement();
+				stmt->execute("USE collecte");
+				char query[1200];
+				sprintf(query, "INSERT INTO station2serre(date, heure, Tensiometre1, Tensiometre2, Moisissure1, Moisissure2, Humidite, Temperature) VALUES('%s', '%02d:%02d', %f, %f, %d, %d, %d, %f)", dreleve.c_str(), heure, minute, tensiometre1, tensiometre2, humisol1, humisol2, humidite, temperature);
+				//cout<<endl<<query;
+				res = stmt-> execute(query);
+				cout<<endl<<endl<<"Nombre de ligne insérée: "<<res+1;
+				//delete res;
+				delete stmt;
+				delete con;
+				}
+			catch (sql::SQLException &e)
+				{
+				std::cout<<endl<<endl<< "# ERR: " << e.what();
+				std::cout<<" (MySOL error code: " << e.getErrorCode ();
+				std::cout<<", SQLState: " << e.getSQLState() << " )" << std::endl;
+				//return EXIT_SUCCESS;
+				}
 			
 		}
 		
