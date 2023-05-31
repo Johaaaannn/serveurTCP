@@ -1,6 +1,9 @@
 /*	ServeurTcp.cpp    */
 
 #include <stdio.h>
+#include <iostream>
+#include <string>
+#include <cstdint>
 #include <errno.h>
 #include <sys/time.h>
 #include <sys/types.h>
