@@ -19,28 +19,28 @@ int main(){
 
 		ServeurTcp serveur(1115);
 		
-		while(1)
-		{
+		while(1){
 
-		cout<<"Le serveur est en attente de connexion..."<<endl;
-
+		cout<<endl<<"Le serveur est en attente de connexion..."<<endl;
+		
 		serveur.accepter();
-		cout<<"Connexion établie avec le client."<<endl;
+		cout<<endl<<"Connexion établie avec le client."<<endl;
+		
 		sleep(2);
 		
 		unsigned char req[5] ={ 0xf2, 0x03, 0x0c, 0xca, 0x6c};
 		unsigned char* requete = reinterpret_cast<unsigned char*>(req);
 		serveur.envoyerTrame(requete);
-		cout<<"Requête envoyée"<<endl;
+		cout<<endl<<"Requête envoyée"<<endl;
 		
-		int tailleTrame;
+		int tailleTrame = 61 ;
 		unsigned char reponse[tailleTrame];
 		tailleTrame = serveur.recevoirTrame(reponse);
-		cout<<tailleTrame;
+		//cout<<tailleTrame;
 		char* rep = reinterpret_cast<char*>(reponse);
-		cout<<endl<<endl<<"Réponse reçu: ";
+		cout<<endl<<endl<<"Réponse reçue: ";
 		for(int i=0;i<tailleTrame;i++){
-			cout<<hex<< " 0x"<<(int)(rep[i]&0xff);
+			cout<<hex<<" 0x"<<(int)(rep[i]&0xff);
 		}
 		
 		if((rep[1]&0xff)==0x1){
@@ -91,40 +91,55 @@ int main(){
 			cout<<endl<<dec<<"Pyranomètre: "<<pyranometre<<"W/m2";
 			
 			float anemometre = reponse[48];
-			anemometre = anemometre / 10;
+			anemometre = 0.447 * anemometre;
 			cout<<endl<<dec<<"Anèmomètre: "<<anemometre<<"m/s";
 			
 			int pluviometre = reponse[51];
 			pluviometre = pluviometre / 10;
 			cout<<endl<<dec<<"Pluviomètre: "<<pluviometre<<"mm";
 			
+			short int crcTrame = ((reponse[tailleTrame-2]<<8) + reponse[tailleTrame-1]);
+			cout<<endl<<endl<<"Crc Trame: "<<hex<<crcTrame;
 			
-				try {
-					sql::mysql::MySQL_Driver *driver;
-					sql:: Connection *con;
-					sql::Statement *stmt;
-					//sql::ResultSet *res;
-					bool res;
-					driver = sql::mysql::get_mysql_driver_instance();
-					con = driver-> connect("localhost", "comcollecteTCP", "collecte");
-					stmt = con-> createStatement();
-					stmt->execute("USE collecte");
-					char query[1200];
-					sprintf(query, "INSERT INTO station1champs(date, heure, Anemometre, Girouette, Pyranometre, Humectometre, Pluviometre, HumAir, Batterie, Temperature) VALUES('%s', '%02d:%02d', %f, %d, %f, %d, %d, %d, %d, %f)", dreleve.c_str(), heure, minute, anemometre, girouette, pyranometre, humectometre, pluviometre, HumAir, batterie, temperature);
-					//cout<<endl<<query;
-					res = stmt-> execute(query);
-					cout<<endl<<endl<<"Nombre de ligne insérée: "<<res+1;
-					//delete res;
-					delete stmt;
-					delete con;
-					}
+			short int crc = serveur.calculerCRC(reponse, tailleTrame);
+			cout<<endl<<hex<<"Le crc est: "<<(int)crc;
+			
+			if(crcTrame == crc){
+				
+				cout<<endl<<endl<<"Les Trames correspondent";
+			
+			try {
+				sql::mysql::MySQL_Driver *driver;
+				sql:: Connection *con;
+				sql::Statement *stmt;
+				//sql::ResultSet *res;
+				bool res;
+				driver = sql::mysql::get_mysql_driver_instance();
+				con = driver-> connect("localhost", "comcollecteTCP", "collecte");
+				stmt = con-> createStatement();
+				stmt->execute("USE collecte");
+				char query[1200];
+				sprintf(query, "INSERT INTO station1champs(date, heure, Anemometre, Girouette, Pyranometre, Humectometre, Pluviometre, HumAir, Batterie, Temperature) VALUES('%s', '%02d:%02d', %f, %d, %f, %d, %d, %d, %d, %f)", dreleve.c_str(), heure, minute, anemometre, girouette, pyranometre, humectometre, pluviometre, HumAir, batterie, temperature);
+				//cout<<endl<<query;
+				res = stmt-> execute(query);
+				cout<<endl<<endl<<"Nombre de ligne insérée: "<<res+1;
+				//delete res;
+				delete stmt;
+				delete con;
+			}
 					
-				catch (sql::SQLException &e){
-					std::cout<<endl<<endl<< "# ERR: " << e.what();
-					std::cout<<" (MySOL error code: " << e.getErrorCode ();
-					std::cout<<", SQLState: " << e.getSQLState() << " )" << std::endl;
-					//return EXIT_SUCCESS;
-				}
+			catch (sql::SQLException &e){
+				std::cout<<endl<<endl<< "# ERR: " << e.what();
+				std::cout<<" (MySOL error code: " << e.getErrorCode ();
+				std::cout<<", SQLState: " << e.getSQLState() << " )" << std::endl;
+				//return EXIT_SUCCESS;
+			}
+			
+			}else{
+				
+				cout<<endl<<"Les Trames ne correspondent pas";
+				
+			}
 		}
 		
 		if((rep[1]&0xff)==0x2){
@@ -188,41 +203,54 @@ int main(){
 				HumSol2 = 100;
 			}
 			cout<<endl<<dec<<"Humidité Sol 2: "<<HumSol2;
-
 			
-				try {
-					sql::mysql::MySQL_Driver *driver;
-					sql:: Connection *con;
-					sql::Statement *stmt;
-					//sql::ResultSet *res;
-					bool res;
-					driver = sql::mysql::get_mysql_driver_instance();
-					con = driver-> connect("localhost", "comcollecteTCP", "collecte");
-					stmt = con-> createStatement();
-					stmt->execute("USE collecte");
-					char query[1200];
-					sprintf(query, "INSERT INTO station2serre(date, heure, Tensiometre1, Tensiometre2, HumSol1, HumSol2, HumAir, Temperature) VALUES('%s', '%02d:%02d', %d, %d, %f, %f, %d, %f)", dreleve.c_str(), heure, minute, tensiometre1, tensiometre2, HumSol1, HumSol2, HumAir, temperature);
-					//cout<<en[Cdl<<query;
-					res = stmt-> execute(query);
-					cout<<endl<<endl<<"Nombre de ligne insérée: "<<res+1;
-					//delete res;
-					delete stmt;
-					delete con;
-				}
+			short int crcTrame = ((reponse[tailleTrame-2]<<8) + reponse[tailleTrame-1]);
+			cout<<endl<<endl<<"Crc Trame: "<<hex<<crcTrame;
+			
+			short int crc = serveur.calculerCRC(reponse, tailleTrame);
+			cout<<endl<<hex<<"Le crc est: "<<(int)crc;
+			
+			if(crcTrame == crc){
+				
+				cout<<endl<<endl<<"Les Trames correspondent";
+			
+			try {
+				sql::mysql::MySQL_Driver *driver;
+				sql:: Connection *con;
+				sql::Statement *stmt;
+				//sql::ResultSet *res;
+				bool res;
+				driver = sql::mysql::get_mysql_driver_instance();
+				con = driver-> connect("localhost", "comcollecteTCP", "collecte");
+				stmt = con-> createStatement();
+				stmt->execute("USE collecte");
+				char query[1200];
+				sprintf(query, "INSERT INTO station2serre(date, heure, Tensiometre1, Tensiometre2, HumSol1, HumSol2, HumAir, Temperature) VALUES('%s', '%02d:%02d', %d, %d, %f, %f, %d, %f)", dreleve.c_str(), heure, minute, tensiometre1, tensiometre2, HumSol1, HumSol2, HumAir, temperature);
+				//cout<<en[Cdl<<query;
+				res = stmt-> execute(query);
+				cout<<endl<<endl<<"Nombre de ligne insérée: "<<res+1;
+				//delete res;
+				delete stmt;
+				delete con;
+			}
 					
-				catch (sql::SQLException &e){
-					std::cout<<endl<<endl<< "# ERR: "<<e.what();
-					std::cout<<endl<<" (MySOL error code: "<<e.getErrorCode ();
-					std::cout<<endl<<", SQLState: "<<e.getSQLState()<<")"<< std::endl;
-					//return EXIT_SUCCESS;
-				}
+			catch (sql::SQLException &e){
+				std::cout<<endl<<endl<< "# ERR: "<<e.what();
+				std::cout<<endl<<" (MySOL error code: "<<e.getErrorCode ();
+				std::cout<<endl<<", SQLState: "<<e.getSQLState()<<")"<< std::endl;
+				//return EXIT_SUCCESS;
+			}
 			
+			}else{
+				
+				cout<<endl<<"Les Trames ne correspondent pas";
+				
+			}
 		}
 		
-		serveur.fermer();
-		cout<<endl<<endl<<"Connexion fermée."<<endl<<endl;
-		
+	serveur.fermer();
+	cout<<endl<<endl<<"Connexion fermée."<<endl<<endl;
+	
 	}
-
-		return 0;
+	
 }

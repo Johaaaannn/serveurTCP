@@ -25,8 +25,8 @@ class ServeurTcp
     	int ecrire(char* chaine, int taille);
 	int envoyerTrame(unsigned char* trame);
 	int recevoirTrame(unsigned char* trame);
-	unsigned int calculerCRC(unsigned char reponse[], int tailleTrame);
     	~ServeurTcp();
+    	unsigned int calculerCRC(unsigned char* reponse, int tailleTrame);
     };
 
 typedef struct
