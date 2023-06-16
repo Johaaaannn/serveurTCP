@@ -37,13 +37,13 @@ int main(){
 		unsigned char reponse[tailleTrame];
 		tailleTrame = serveur.recevoirTrame(reponse);
 		//cout<<tailleTrame;
-		char* rep = reinterpret_cast<char*>(reponse);
+		//char* rep = reinterpret_cast<char*>(reponse);
 		cout<<endl<<endl<<"Réponse reçue: ";
 		for(int i=0;i<tailleTrame;i++){
-			cout<<hex<<" 0x"<<(int)(rep[i]&0xff);
+			cout<<hex<<" 0x"<<(int)(reponse[i]&0xff);
 		}
 		
-		if((rep[1]&0xff)==0x1){
+		if((reponse[1]&0xff)==0x1){
 
 			cout<<endl<<"---------- Station 1 ----------";
 			int station = reponse[1];
@@ -101,10 +101,11 @@ int main(){
 			short int crcTrame = ((reponse[tailleTrame-2]<<8) + reponse[tailleTrame-1]);
 			cout<<endl<<endl<<"Crc Trame: "<<hex<<crcTrame;
 			
-			short int crc = serveur.calculerCRC(reponse, tailleTrame);
-			cout<<endl<<hex<<"Le crc est: "<<(int)crc;
+			unsigned int crc = serveur.calculerCRC(reponse, tailleTrame);
+			short int crcTest = reinterpret_cast<unsigned int>(crc);
+			cout<<endl<<hex<<"Le crc est: "<<(int)crcTest;
 			
-			if(crcTrame == crc){
+			if(crcTrame == crcTest){
 				
 				cout<<endl<<endl<<"Les Trames correspondent";
 			
@@ -142,13 +143,13 @@ int main(){
 			}
 		}
 		
-		if((rep[1]&0xff)==0x2){
+		if((reponse[1]&0xff)==0x2){
 			cout<<endl<<"---------- Station 2 ----------";
-			int station = rep[1];
+			int station = reponse[1];
 			cout<<endl<<endl<<hex<<"Station: "<<station;
 			
-			int heure = rep[2];
-			int minute = rep[3];
+			int heure = reponse[2];
+			int minute = reponse[3];
 			//cout<<endl<<endl<<dec<<"Heure: "<<heure;
 			//cout<<endl<<dec<<"Minute: "<<minute;
 			std::ostringstream h;
@@ -156,9 +157,9 @@ int main(){
 			std::string hreleve = h.str();
 			cout<<endl<<"Heure: "<<hreleve;
 			
-			int jour = rep[4];
-			int mois = rep[5];
-			int annee = rep[6];
+			int jour = reponse[4];
+			int mois = reponse[5];
+			int annee = reponse[6];
 			//cout<<endl<<endl<<dec<<"Date: "<<jour;
 			//cout<<endl<<endl<<dec<<"Date: "<<mois;
 			//cout<<endl<<endl<<dec<<"Date: "<<annee;
@@ -207,10 +208,11 @@ int main(){
 			short int crcTrame = ((reponse[tailleTrame-2]<<8) + reponse[tailleTrame-1]);
 			cout<<endl<<endl<<"Crc Trame: "<<hex<<crcTrame;
 			
-			short int crc = serveur.calculerCRC(reponse, tailleTrame);
-			cout<<endl<<hex<<"Le crc est: "<<(int)crc;
+			unsigned int crc = serveur.calculerCRC(reponse, tailleTrame);
+			short int crcTest = reinterpret_cast<unsigned int>(crc);
+			cout<<endl<<hex<<"Le crc est: "<<(int)crcTest;
 			
-			if(crcTrame == crc){
+			if(crcTrame == crcTest){
 				
 				cout<<endl<<endl<<"Les Trames correspondent";
 			
